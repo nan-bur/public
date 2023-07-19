@@ -30,9 +30,7 @@ batch_intersection <- function(cookie_mp, sf_df, b=10000){
     slice_i <- st_intersection(temp, slice) %>% 
       mutate(area_m2 = as.numeric(st_area(.)))
     
-    # n.b. this intersection results in POINTS for some polygons (mainly seem to be the middle of a figure-of-eight of two separate polygons). 
-    # The points themselves seem to be harmless but it raises a question if st_intersection is doing what we think it is...
-    
+    # n.b. this intersection results in POINTS for some self-intersecting geoms. 
     combined <- rbind(combined, slice_i)
     
     r <- length(remaining)

@@ -31,10 +31,13 @@ fix_invalid <- function(input){
   nonvalid$row <- row.names(nonvalid)
   
   names_r <- names(nonvalid) 
-    
-  st_write(nonvalid, "temp_nonvalid.shp", append = F)
-  gdal_utils(util = "vectortranslate", source = "temp_nonvalid.shp", destination = "temp_revalid.shp", option = "-overwrite")
-  revalid <- st_read("temp_revalid.shp")
+  
+  tf1 <- tempfile("temp_nonvalid_", fileext = ".shp")
+  tf2 <- tempfile("temp_revalid_", fileext = ".shp")
+  
+  st_write(nonvalid, tf1, append = F)
+  gdal_utils(util = "vectortranslate", source = tf1, destination = tf2, option = "-overwrite")
+  revalid <- st_read(tf2)
   revalid <- st_set_geometry( revalid , geomname) %>% st_make_valid
   names(revalid)[names(revalid) != geomname] <- names_r[names_r != geomname]
   na_re <- length(unique(revalid$row))
@@ -47,5 +50,6 @@ fix_invalid <- function(input){
   
     if(na_n > na_re){warning(paste(na_n - na_re, " non-valid polygons were lost."))}
   
+  file.remove(c(tf1, tf2))
   return(result)
 }
