@@ -9,12 +9,14 @@ pacman::p_load(dplyr,
 )
 
 
-fix_invalid <- function(input){
+fix_invalid <- function(input, quiet = T){
 
   # function to "fix" geometries which are invalid in R due to convention differences between ESRI and OGS. 
   # uses postGIS ST_makevalid to make invalid geometries valid (effectively applies a buffer of length zero, forcing the polygon to be re-drawn using OGS conventions)
   # returns a warning if any geometries are "non-valid" (postGIS ST_isvalid = FALSE). Any such polygons are lost from the result. 
   # accepts any name for the geometry column
+
+  if(!is.logical(quiet)){quiet_ = TRUE} else {quiet_ = quiet}
   
   geomname <- attr(input, "sf_column")
     
@@ -35,9 +37,9 @@ fix_invalid <- function(input){
   tf1 <- tempfile("temp_nonvalid_", fileext = ".shp")
   tf2 <- tempfile("temp_revalid_", fileext = ".shp")
   
-  st_write(nonvalid, tf1, append = F)
+  st_write(nonvalid, tf1, append = F, quiet = quiet_)
   gdal_utils(util = "vectortranslate", source = tf1, destination = tf2, option = "-overwrite")
-  revalid <- st_read(tf2)
+  revalid <- st_read(tf2, quiet = quiet_)
   revalid <- st_set_geometry( revalid , geomname) %>% st_make_valid
   names(revalid)[names(revalid) != geomname] <- names_r[names_r != geomname]
   na_re <- length(unique(revalid$row))
